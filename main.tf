@@ -134,6 +134,13 @@ ingress {
     to_port = 22
     protocol = "tcp"
 }
+
+ingress {
+   from_port   = 0
+   to_port     = 0
+   protocol    = "-1"
+   cidr_blocks = ["0.0.0.0/0"]
+}
 egress {
    from_port   = 0
    to_port     = 0
@@ -143,7 +150,7 @@ egress {
 }
 
 resource "aws_instance" "app_server" {
-  ami           = "ami-051f8a213df8bc089"
+  ami           = "ami-080e1f13689e07408"
   subnet_id = aws_subnet.public_subnets[0].id
   associate_public_ip_address = true
   vpc_security_group_ids = [
@@ -154,6 +161,7 @@ resource "aws_instance" "app_server" {
   key_name = "key-personal"
   user_data = <<-EOF
                   #!/bin/bash
+                  sudo su
                   apt update
                   apt install -y nginx
                   service nginx start
