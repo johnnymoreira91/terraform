@@ -108,15 +108,47 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
 
 resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv6" {
   security_group_id = aws_security_group.allow_http.id
+  
   cidr_ipv6         = "::/0"
   ip_protocol       = "-1"
 }
 
+resource "aws_security_group" "web_server_sg_tf" {
+ name        = "web-server-sg-tf"
+ description = "Allow HTTPS to web server"
+ vpc_id      = aws_vpc.main.id
+
+ingress {
+   description = "HTTPS ingress"
+   from_port   = 443
+   to_port     = 443
+   protocol    = "tcp"
+   cidr_blocks = ["0.0.0.0/0"]
+ }
+
+ingress {
+    cidr_blocks = [
+      "0.0.0.0/0"
+    ]
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+}
+egress {
+   from_port   = 0
+   to_port     = 0
+   protocol    = "-1"
+   cidr_blocks = ["0.0.0.0/0"]
+ }
+}
+
 resource "aws_instance" "app_server" {
   ami           = "ami-051f8a213df8bc089"
-  subnet_id = aws_subnet.public_subnets.id
+  subnet_id = aws_subnet.public_subnets[0].id
+  associate_public_ip_address = true
   vpc_security_group_ids = [
-    aws_security_group.allow_http.id
+    aws_security_group.allow_http.id,
+    aws_security_group.web_server_sg_tf.id
   ]
   instance_type = "t2.micro"
   key_name = "key-personal"
